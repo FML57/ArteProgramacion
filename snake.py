@@ -29,8 +29,15 @@ def move():
 
     if head == food:
         print('Snake:', len(snake))
-        food.x = randrange(-15, 15) * 10
-        food.y = randrange(-15, 15) * 10
+        # Generate a random new food position that is within the window
+        while True:
+            food.x = randrange(-19, 20) * 10
+            food.y = randrange(-19, 20) * 10
+            if food not in snake and inside(food):
+                break
+        # Generate a random color for the food that is not red
+        food_color = random.choice(['blue', 'green', 'purple', 'yellow'])
+        square(food.x, food.y, 9, food_color)
     else:
         snake.pop(0)
 
@@ -39,7 +46,6 @@ def move():
     for body in snake:
         square(body.x, body.y, 9, 'black')
 
-    square(food.x, food.y, 9, 'green')
     update()
     ontimer(move, 100)
 
