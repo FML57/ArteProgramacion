@@ -61,14 +61,21 @@ def draw():
     if mark is not None and hide[mark]:
         x, y = xy(mark)
         up()
-        goto(x + 2, y)
+        # Center the letter on the tile
+        x += 25 - textwidth(letters[mark], font=('Arial', 30, 'normal')) / 2
+        goto(x, y)
         color('black')
-        write(tiles[mark], font=('Arial', 30, 'normal'))
+        write(letters[mark], font=('Arial', 30, 'normal'))
 
     update()
-    ontimer(draw, 100)
 
-shuffle(tiles)
+    # Check if the game is over when all letters are revealed
+    if all(hide) == False:
+        ontimer(draw, 100)
+    else:
+        print("Game over! You took", taps, "taps.")
+
+shuffle(letters)
 setup(420, 420, 370, 0)
 addshape(car)
 hideturtle()
