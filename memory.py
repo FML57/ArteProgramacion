@@ -3,9 +3,12 @@ from turtle import *
 from freegames import path
 
 car = path('car.gif')
-tiles = list(range(32)) * 2
+#Change tiles(numbers) to a list of letters
+letters = list('ABCDEFGHIJKLMNOPQRSTUVWXYZ')[:32] * 2
+shuffle(letters)
 state = {'mark': None}
 hide = [True] * 64
+taps=0
 
 def square(x, y):
     "Draw white square with black outline at (x, y)."
@@ -28,11 +31,13 @@ def xy(count):
     return (count % 8) * 50 - 200, (count // 8) * 50 - 200
 
 def tap(x, y):
-    "Update mark and hidden tiles based on tap."
+    "Update mark and hidden tiles based on tap. Counts the number of taps."
+    global taps
+    taps += 1
     spot = index(x, y)
     mark = state['mark']
 
-    if mark is None or mark == spot or tiles[mark] != tiles[spot]:
+    if mark is None or mark == spot or letters[mark] != letters[spot]:
         state['mark'] = spot
     else:
         hide[spot] = False
