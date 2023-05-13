@@ -3,9 +3,12 @@ from turtle import *
 from freegames import path
 
 car = path('car.gif')
-tiles = list(range(32)) * 2
+#Change tiles(numbers) to a list of letters
+letters = list('ABCDEFGHIJKLMNOPQRSTUVWXYZ')[:32] * 2
+shuffle(letters)
 state = {'mark': None}
 hide = [True] * 64
+taps=0
 
 def square(x, y):
     "Draw white square with black outline at (x, y)."
@@ -28,11 +31,13 @@ def xy(count):
     return (count % 8) * 50 - 200, (count // 8) * 50 - 200
 
 def tap(x, y):
-    "Update mark and hidden tiles based on tap."
+    "Update mark and hidden tiles based on tap. Counts the number of taps."
+    global taps
+    taps += 1
     spot = index(x, y)
     mark = state['mark']
 
-    if mark is None or mark == spot or tiles[mark] != tiles[spot]:
+    if mark is None or mark == spot or letters[mark] != letters[spot]:
         state['mark'] = spot
     else:
         hide[spot] = False
@@ -56,14 +61,21 @@ def draw():
     if mark is not None and hide[mark]:
         x, y = xy(mark)
         up()
-        goto(x + 2, y)
+        # Center the letter on the tile
+        x += 25 - textwidth(letters[mark], font=('Arial', 30, 'normal')) / 2
+        goto(x, y)
         color('black')
-        write(tiles[mark], font=('Arial', 30, 'normal'))
+        write(letters[mark], font=('Arial', 30, 'normal'))
 
     update()
-    ontimer(draw, 100)
 
-shuffle(tiles)
+    # Check if the game is over when all letters are revealed
+    if all(hide) == False:
+        ontimer(draw, 100)
+    else:
+        print("Game over! You took", taps, "taps.")
+
+shuffle(letters)
 setup(420, 420, 370, 0)
 addshape(car)
 hideturtle()
