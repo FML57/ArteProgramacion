@@ -40,10 +40,16 @@ def move():
         targets.append(target)
 
     for target in targets:
-        target.x -= 0.5
+        target.x -= 1  # increase target speed to make it faster
+
+        if target.x < -200:  # check if target is out of screen
+            targets.remove(target)
+            y = randrange(-150, 150)
+            target = vector(200, y)
+            targets.append(target)
 
     if inside(ball):
-        speed.y -= 0.35
+        speed.y -= 0.7  # increase ball speed to make it fall faster
         ball.move(speed)
 
     dupe = targets.copy()
@@ -60,6 +66,7 @@ def move():
             return
 
     ontimer(move, 50)
+
 
 setup(420, 420, 370, 0)
 hideturtle()
