@@ -7,12 +7,14 @@ path = Turtle(visible=False)
 writer = Turtle(visible=False)
 aim = vector(5, 0)
 pacman = vector(-40, -80)
+"Ghosts can be faster by increasing the value of the second column vectors"
 ghosts = [
-    [vector(-180, 160), vector(5, 0)],
-    [vector(-180, -160), vector(0, 5)],
-    [vector(100, 160), vector(0, -5)],
-    [vector(100, -160), vector(-5, 0)],
+    [vector(-180, 160), vector(10, 0)],
+    [vector(-180, -160), vector(0, 10)],
+    [vector(100, 160), vector(0, -10)],
+    [vector(100, -160), vector(-10, 0)],
 ]
+"Map can be changed by modifing this matrix, or by assigning random numbers (although the results may be unplayable)"
 tiles = [
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     0, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0,
@@ -35,6 +37,14 @@ tiles = [
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 ]
+"""
+Another way to create the map is with two for cycles:
+for y in range(len(tiles)):
+    for x in range(len(tiles[y])):
+        if tiles[y][x] == 0:
+            square(x * 20 - 200, 200 - y * 20, 20, "blue")
+"""
+
 
 def square(x, y):
     "Draw square using path at (x, y)."
@@ -88,54 +98,64 @@ def world():
                 path.goto(x + 10, y + 10)
                 path.dot(2, 'white')
 
-def move():
-    "Move pacman and all ghosts."
-    writer.undo()
-    writer.write(state['score'])
+"""Bifurcation of Ghosts and Pacman movement in order for a better AI, using vectors and distance from pacman """
 
-    clear()
+def distance(a, b):
+    """Return the Euclidean distance between two vectors."""
+    return abs(a - b)
 
-    if valid(pacman + aim):
-        pacman.move(aim)
+def towards(a, b):
+    """Return the unit vector pointing from a to b."""
+    return (b - a).normalize()
 
-    index = offset(pacman)
+def find_nearest_ghost(ghosts, pacman):
+    """Return the index of the ghost closest to Pac-Man."""
+    distances = [distance(g[0], pacman) for g in ghosts]
+    return distances.index(min(distances))
 
-    if tiles[index] == 1:
-        tiles[index] = 2
+def move_ghosts():
+    """Move the ghosts towards Pac-Man."""
+    nearest_ghost = find_nearest_ghost(ghosts, pacman)
+    for i, ghost in enumerate(ghosts):
+        if i == nearest_ghost:
+            # Move towards Pac-Man.
+            direction = towards(ghost[0], pacman)
+            ghost[1] = direction * 6
+        else:
+            # Move randomly.
+            directions = [vector(0, 6), vector(0, -6), vector(6, 0), vector(-6, 0)]
+            ghost[1] = choice(directions)
+
+    for ghost in ghosts:
+        ghost[0] += ghost[1]
+
+    # Check for collision with Pac-Man.
+    for ghost in ghosts:
+        if distance(ghost[0], pacman) < 20:
+            return
+
+    ontimer(move_ghosts, 100)
+
+def move_pacman():
+    """Move Pac-Man and check for collision with dots."""
+    pacman_move = pacman + aim
+    x = floor(pacman_move.x, 20)
+    y = floor(pacman_move.y, 20)
+
+    if tiles[x][y] == 1:
         state['score'] += 1
-        x = (index % 20) * 20 - 200
-        y = 180 - (index // 20) * 20
-        square(x, y)
+        writer.undo()
+        writer.write(f"Score: {state['score']}", font=("Arial", 16, "normal"))
+
+    if tiles[x][y] != 0:
+        pacman.move(aim)
 
     up()
     goto(pacman.x + 10, pacman.y + 10)
-    dot(20, 'yellow')
-
-    for point, course in ghosts:
-        if valid(point + course):
-            point.move(course)
-        else:
-            options = [
-                vector(5, 0),
-                vector(-5, 0),
-                vector(0, 5),
-                vector(0, -5),
-            ]
-            plan = choice(options)
-            course.x = plan.x
-            course.y = plan.y
-
-        up()
-        goto(point.x + 10, point.y + 10)
-        dot(20, 'red')
-
+    dot(20, "yellow")
     update()
 
-    for point, course in ghosts:
-        if abs(pacman - point) < 20:
-            return
-
-    ontimer(move, 100)
+    ontimer(move_pacman, 100)
 
 def change(x, y):
     "Change pacman aim if valid."
@@ -155,5 +175,6 @@ onkey(lambda: change(-5, 0), 'Left')
 onkey(lambda: change(0, 5), 'Up')
 onkey(lambda: change(0, -5), 'Down')
 world()
-move()
+move_pacman()
+move_ghosts()
 done()
